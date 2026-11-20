@@ -25,3 +25,11 @@ Fiziksel Android telefonda ve tüm üretici/Android sürümü kombinasyonlarınd
 - Boş Android meta verisi, eksik süre, format/akış süresi yedeği, kapak görseli ve döndürme bilgisi için 6 yeni birim testi eklendi; toplam 15 birim testi başarılı.
 - FFprobe ikilisiyle dosya bilgileri okundu; bildirilen gönderi indirme → MP4 → GIF akışıyla doğrulandı.
 - Aynı release imzasıyla 1.0.0 üzerine 1.0.1 kuruldu.
+
+## 1.0.2: kaydetme düğmeleri
+
+- GIF ve MP4 için ayrı kaydetme düğmeleri dosya açılınca görünür.
+- Arayüzdeki GIF düğmesine basılarak hareketli GIF üretildiği ve galeriye yazıldığı doğrulandı.
+- Arayüzdeki MP4 düğmesine basılarak video kaydı doğrulandı.
+- Mevcut kesme, kırpma, hız, ses ve dönüştürme testleri başarılı.
+- 15 birim testi ve Android Lint denetimi başarılı.

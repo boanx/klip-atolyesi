@@ -2,7 +2,7 @@
 
 X bağlantısından video alma, telefondan video/GIF açma ve kaynak biçiminden bağımsız MP4 ya da hareketli GIF üretme uygulaması. Türkçe, reklamsız; düzenleme cihaz üzerinde çalışır. Android 10 ve üzeri; ARM64, ARMv7 ve x86_64 işlemciler.
 
-**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.0.1.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
+**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.0.2.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
 
 APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle doğrulanmıştır. Fiziksel telefonda ayrıca test edilmemiştir.
 
@@ -12,7 +12,7 @@ APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle
 2. X’te gönderiyi paylaşırken **Klip Atölyesi**ni seçin veya gönderi bağlantısını uygulamaya yapıştırın. **X’ten indir** düğmesine dokunun. Alternatif olarak telefondan video veya GIF açın.
 3. Başlangıç ve bitiş zamanını saniye olarak girin ya da sürgülerle seçin. Kırpma çerçevesinin köşelerini sürükleyin. Oran düğmesi merkezden bir oran seçer; serbestçe değiştirebilirsiniz.
 4. Döndürme, aynalama, hız, görünüm ve genişlik seçin. Önizleme kaynak dosyadır; görüntü efektleri dışa aktarılırken uygulanır.
-5. MP4 veya GIF biçimini seçin ve **Galeriye kaydet** düğmesine dokunun. Son çıktıyı açabilir veya paylaşabilirsiniz.
+5. **GIF olarak kaydet** veya **Video (MP4) olarak kaydet** düğmesine dokunun. Düğmeler dosyayı açtıktan hemen sonra ve düzenleme seçeneklerinin altında görünür. Son çıktıyı açabilir veya paylaşabilirsiniz.
 
 Videolar `Movies/KlipAtolyesi`, GIF’ler `Pictures/KlipAtolyesi` klasörüne kaydedilir. Bazı galeri uygulamaları GIF’leri ayrı “Animasyonlar” albümünde gösterebilir; Android Dosyalar uygulamasından da erişilebilir.
 
@@ -65,3 +65,7 @@ GPL-3.0 kapsamında dağıtılır. Bağımlılıklar ve kaynak bağlantıları: 
 ## 1.0.1 düzeltmesi
 
 Android'in bazı MP4 dosyalarında görüntü boyutunu veya süreyi boş döndürmesi nedeniyle görülen `s == null` hatası giderildi. Android bilgileri okuyamazsa uygulama kendi FFprobe ikilisiyle dosyayı analiz eder; eksik bilgiler artık doğrudan sayıya çevrilmez. Bildirilen gönderide indirme, MP4 ve GIF kaydı yeniden test edildi. 1.0.0 üzerine uygulamayı kaldırmadan güncellenebilir.
+
+## 1.0.2: doğrudan GIF kaydetme
+
+Dosya açıldığında görünen **GIF olarak kaydet** ve **Video (MP4) olarak kaydet** düğmeleri eklendi. Biçim menüsünde seçim yapmaya gerek yoktur. Aynı düğmeler düzenleme seçeneklerinin altında da yer alır; seçili kesme, kırpma ve diğer ayarlar uygulanır.

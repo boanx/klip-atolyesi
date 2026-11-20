@@ -28,7 +28,7 @@ public class EngineInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         try {
             Context c=getTargetContext();MediaEngine e=MediaEngine.I;
-            startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            Activity activity=startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             Thread.sleep(1000);if(e.busy)waitJob();
             if(networkUrl!=null) {
                 if(!skipUpdate) {runOnMainSync(()->e.update(c));waitJob();}
@@ -54,6 +54,13 @@ public class EngineInstrumentation extends Instrumentation {
             try { MediaEngine.xUrl("https://x.com.evil.example/u/status/123");throw new Exception("Sahte alan adı kabul edildi"); } catch(IllegalArgumentException expected) {report.append("PASS: Sahte alan adı reddedildi\n");}
             runOnMainSync(()->e.importFile(c,Uri.fromFile(input)));waitJob();
             check(e.width==320 && e.height==240 && e.duration>3.9,"Video boyutu ve süresi okundu");
+            waitForIdleSync();
+            check(activity.findViewById(R.id.save_gif).isShown(),"GIF olarak kaydet seçeneği medya açılınca görünür");
+            runOnMainSync(()->activity.findViewById(R.id.save_gif).performClick());waitJob();
+            check("image/gif".equals(e.resultMime),"GIF düğmesi GIF biçimini doğrudan seçiyor");
+            try(InputStream in=c.getContentResolver().openInputStream(e.result)) {Movie movie=Movie.decodeStream(in);check(movie!=null && movie.duration()>3000,"GIF düğmesi gerçek hareketli GIF kaydediyor");}
+            runOnMainSync(()->activity.findViewById(R.id.save_video).performClick());waitJob();
+            check("video/mp4".equals(e.resultMime),"Video düğmesi doğrudan MP4 kaydediyor");
             EditSpec s=new EditSpec();s.width=e.width;s.height=e.height;s.start=.5;s.end=2.5;s.left=.25;s.right=.75;s.rotation=90;s.speed=2;
             runOnMainSync(()->e.export(c,s));waitJob();Uri video=e.result;outputs.add(video);
             check("video/mp4".equals(e.resultMime),"MP4 galeriye kaydedildi");

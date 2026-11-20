@@ -19,12 +19,12 @@ import java.util.*;
 public class MainActivity extends Activity implements MediaEngine.Listener {
     private static final int BG=0xff101516,CARD=0xff1b2425,ACCENT=0xffa8f078,TEXT=0xfff3f6f2,MUTED=0xffaab7b3;
     private final MediaEngine engine=MediaEngine.I;
-    private LinearLayout root,editor,outputCard;
+    private LinearLayout root,editor,outputCard,quickSaveCard;
     private EditText url,start,end;
     private TextView status,error,info,previewError;
     private ProgressBar progress;
-    private Button download,importButton,export,cancel,update,play,open,share;
-    private Spinner format,cropPreset,speed,size,fps,rotate,filter;
+    private Button download,importButton,saveGif,saveVideo,exportGif,exportVideo,cancel,update,play,open,share;
+    private Spinner cropPreset,speed,size,fps,rotate,filter;
     private Switch mute,mirror;
     private VideoView video;
     private GifPreview gif;
@@ -70,6 +70,12 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         error=text("",13,0xffffb5a8);error.setTextIsSelectable(true);stateCard.addView(error);
         cancel=button("İşlemi iptal et",false);stateCard.addView(cancel);cancel.setOnClickListener(v -> engine.cancel());
 
+        quickSaveCard=card(root);heading(quickSaveCard,"Nasıl kaydetmek istersin?");
+        quickSaveCard.addView(text("Kaynak video veya GIF olabilir. Seçili süre ve düzenlemeler uygulanır.",12,MUTED));
+        saveGif=button("GIF olarak kaydet",true);saveGif.setId(R.id.save_gif);quickSaveCard.addView(saveGif);saveGif.setOnClickListener(v -> save(true));
+        saveVideo=button("Video (MP4) olarak kaydet",false);saveVideo.setId(R.id.save_video);quickSaveCard.addView(saveVideo);saveVideo.setOnClickListener(v -> save(false));
+        quickSaveCard.addView(text("GIF sessiz ve döngülü kaydedilir. En fazla 60 saniye seçebilirsin.",12,MUTED));
+
         editor=card(root);heading(editor,"02  Kes, kırp ve biçimlendir");
         info=text("",12,MUTED);editor.addView(info);
         FrameLayout preview=new FrameLayout(this); preview.setBackgroundColor(Color.BLACK);
@@ -98,19 +104,18 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         speed=spinner(editor,"Oynatma hızı",new String[]{"0,25×","0,5×","0,75×","1× · normal","1,5×","2×","4×"});speed.setSelection(3);
         filter=spinner(editor,"Görünüm",new String[]{"Doğal","Canlı","Siyah beyaz","Sıcak"});
         heading(editor,"03  Çıkışını seç");
-        format=spinner(editor,"Kaydetme biçimi",new String[]{"MP4 · video","GIF · sessiz, döngülü"});
         size=spinner(editor,"En fazla genişlik · büyütme yapılmaz",new String[]{"480 piksel · küçük dosya","720 piksel · dengeli","1080 piksel · yüksek","1920 piksel · en yüksek"});size.setSelection(1);
         fps=spinner(editor,"GIF akıcılığı",new String[]{"10 kare/sn","15 kare/sn","20 kare/sn","24 kare/sn"});fps.setSelection(1);
         mute=new Switch(this);mute.setText("Videonun sesini kaldır");mute.setTextColor(TEXT);editor.addView(mute);
-        format.setOnItemSelectedListener(selected(p -> { fps.setEnabled(p==1);mute.setEnabled(p==0); }));
         editor.addView(text("GIF ses içermez. GIF çıktısı en fazla 60 saniye olabilir. Video kaydında ses varsa korunur.",12,MUTED));
-        export=button("Galeriye kaydet",true);editor.addView(export);export.setOnClickListener(v -> save());
+        exportGif=button("GIF olarak kaydet",true);editor.addView(exportGif);exportGif.setOnClickListener(v -> save(true));
+        exportVideo=button("Video (MP4) olarak kaydet",false);editor.addView(exportVideo);exportVideo.setOnClickListener(v -> save(false));
 
         outputCard=card(root);heading(outputCard,"Son kaydın hazır");outputCard.addView(text("Videolar: Movies/KlipAtolyesi\nGIF’ler: Pictures/KlipAtolyesi",13,MUTED));
         LinearLayout outputRow=row(outputCard);open=button("Dosyayı aç",false);share=button("Paylaş",true);outputRow.addView(open,weight());outputRow.addView(share,weight());
         open.setOnClickListener(v -> output(false));share.setOnClickListener(v -> output(true));
         LinearLayout footer=card(root);update=button("İndirme motorunu güncelle",false);footer.addView(update);update.setOnClickListener(v -> {notifications();engine.update(this);});
-        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.0.1 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X ile bağlantılı değildir.",12,MUTED));
+        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.0.2 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X ile bağlantılı değildir.",12,MUTED));
         Button about=button("Kullanım ve açık kaynak lisansları",false);footer.addView(about);about.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("Klip Atölyesi").setMessage("Yalnızca kaydetme ve kullanma hakkınız bulunan içerikleri işleyin.\n\nİndirme: yt-dlp / youtubedl-android\nDönüştürme: FFmpeg\nUygulama ve bağımlılıklar GPL-3.0 kapsamında sunulur. Kaynak kod teslim paketindedir.\n\nhttps://github.com/yausername/youtubedl-android\nhttps://github.com/yt-dlp/yt-dlp\nhttps://ffmpeg.org\n\nUygulama geliştiricisine dosya veya analiz verisi gönderilmez. X indirmeleri X sunucularıyla; motor güncellemesi GitHub ile iletişim kurar.").setPositiveButton("Tamam",null).show());
         engine.listener=this;
         if(state!=null) { url.setText(state.getString("url","")); }
@@ -123,7 +128,9 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         status.setText(engine.status);error.setText(engine.error);error.setVisibility(engine.error.isEmpty()?View.GONE:View.VISIBLE);
         progress.setVisibility(engine.busy?View.VISIBLE:View.GONE);progress.setIndeterminate(engine.progress<0);progress.setProgress(Math.max(0,engine.progress));
         cancel.setVisibility(engine.busy?View.VISIBLE:View.GONE);
-        download.setEnabled(!engine.busy);importButton.setEnabled(!engine.busy);update.setEnabled(!engine.busy);export.setEnabled(!engine.busy);
+        download.setEnabled(!engine.busy);importButton.setEnabled(!engine.busy);update.setEnabled(!engine.busy);
+        saveGif.setEnabled(!engine.busy);saveVideo.setEnabled(!engine.busy);exportGif.setEnabled(!engine.busy);exportVideo.setEnabled(!engine.busy);
+        quickSaveCard.setVisibility(engine.source==null?View.GONE:View.VISIBLE);
         editor.setVisibility(engine.source==null?View.GONE:View.VISIBLE);outputCard.setVisibility(engine.result==null?View.GONE:View.VISIBLE);
         crop.setEnabled(!engine.busy);
         if(engine.source!=null && !loaded.equals(engine.source.getAbsolutePath())) {
@@ -135,13 +142,13 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
             if(engine.sourceGif) gif.load(loaded);else video.setVideoPath(loaded);
         }
     }
-    private void save() {
+    private void save(boolean gifOutput) {
         hideKeyboard();video.pause();notifications();
         EditSpec s=new EditSpec();s.start=number(start,Double.NaN);s.end=number(end,Double.NaN);s.width=engine.width;s.height=engine.height;
         s.left=crop.left;s.top=crop.top;s.right=crop.right;s.bottom=crop.bottom;
         s.rotation=rotate.getSelectedItemPosition()*90;s.mirror=mirror.isChecked();s.filter=filter.getSelectedItemPosition();
         s.speed=new double[]{.25,.5,.75,1,1.5,2,4}[speed.getSelectedItemPosition()];s.maxWidth=new int[]{480,720,1080,1920}[size.getSelectedItemPosition()];
-        s.fps=new int[]{10,15,20,24}[fps.getSelectedItemPosition()];s.gif=format.getSelectedItemPosition()==1;s.mute=mute.isChecked();
+        s.fps=new int[]{10,15,20,24}[fps.getSelectedItemPosition()];s.gif=gifOutput;s.mute=mute.isChecked();
         engine.export(this,s);
     }
     private void output(boolean sharing) {

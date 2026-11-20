@@ -1,0 +1,4 @@
+<resources>
+    <item name="save_gif" type="id" />
+    <item name="save_video" type="id" />
+</resources>

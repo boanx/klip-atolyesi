@@ -1,16 +1,18 @@
-KLİP ATÖLYESİ 1.0.1 — ANDROID
+KLİP ATÖLYESİ 1.0.2 — ANDROID
 
-1. Klip-Atolyesi-1.0.1.apk dosyasını Android telefonunuza aktarın.
+1. Klip-Atolyesi-1.0.2.apk dosyasını Android telefonunuza aktarın.
 2. Dosyayı açın. Android isterse dosyayı açtığınız uygulamaya
    “Bilinmeyen uygulamaları yükle” iznini verin ve Yükle'ye dokunun.
 3. Klip Atölyesi'ni açın.
 
-1.0.0 yüklüyse uygulamayı silmeniz gerekmez; APK güncelleme olarak kurulur.
+Önceki sürüm yüklüyse uygulamayı silmeniz gerekmez; APK güncelleme olarak kurulur.
 
 4. X gönderisi bağlantısını yapıştırıp “X’ten indir”e dokunun.
    X’in paylaş menüsünden de Klip Atölyesi'ni seçebilirsiniz.
 5. Süreyi kesin, kırpın, hız/döndürme/görünüm seçeneklerini ayarlayın.
-6. MP4 veya GIF seçip “Galeriye kaydet”e dokunun.
+6. “GIF olarak kaydet” veya “Video (MP4) olarak kaydet”e dokunun.
+   Bu düğmeler dosya açıldığında hemen görünür; aşağıdaki düzenleme
+   seçeneklerinin altında da yer alır.
 
 Telefonunuzdaki video ve GIF’leri “Telefondan video / GIF aç” ile
 aynı şekilde düzenleyebilirsiniz.
