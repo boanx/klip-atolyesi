@@ -45,6 +45,7 @@ public final class MediaEngine {
         pending = () -> {
             try { work.run(c); }
             catch (Exception e) {
+                android.util.Log.e("KlipAtolyesi", "Medya işlemi tamamlanamadı", e);
                 if (cancelled) state("İşlem iptal edildi.", -1);
                 else { error = friendly(e); state("İşlem tamamlanamadı.", -1); }
             } finally {
@@ -132,23 +133,28 @@ public final class MediaEngine {
         byte[] header = new byte[6];
         try (InputStream in = new FileInputStream(f)) { in.read(header); }
         boolean gif = new String(header, java.nio.charset.StandardCharsets.US_ASCII).startsWith("GIF8");
-        int w,h; double seconds;
+        int w=0,h=0; double seconds=0;
         if (gif) {
             Movie movie = Movie.decodeFile(f.getAbsolutePath());
-            if (movie == null) throw new IOException("GIF okunamadı.");
-            w=movie.width(); h=movie.height(); seconds=movie.duration()/1000.0;
-            if (seconds <= 0) seconds=1;
+            if (movie != null) { w=movie.width(); h=movie.height(); seconds=movie.duration()/1000.0; }
         } else {
             try (MediaMetadataRetriever retriever = new MediaMetadataRetriever()) {
                 retriever.setDataSource(f.getAbsolutePath());
-                w=Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-                h=Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-                seconds=Long.parseLong(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))/1000.0;
+                w=(int)metadataNumber(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+                h=(int)metadataNumber(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+                seconds=metadataNumber(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))/1000.0;
                 String rot = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
                 if ("90".equals(rot) || "270".equals(rot)) { int swap=w; w=h; h=swap; }
+            } catch (Exception ignored) {
+                // Android may not expose metadata for codecs/containers FFmpeg supports.
+                w=h=0;seconds=0;
             }
         }
-        if (w<2 || h<2 || seconds<=0) throw new IOException("Dosyada geçerli bir hareketli görüntü bulunamadı.");
+        if (w<2 || h<2 || seconds<=0) {
+            state("Video bilgileri alternatif yöntemle okunuyor…",-1);
+            MediaInfo fallback=probe(c,f);
+            w=fallback.width;h=fallback.height;seconds=fallback.duration;
+        }
         File old = source;
         width=w; height=h; duration=seconds; sourceGif=gif; sourceName=name; source=f;
         c.getSharedPreferences("media",0).edit().putString("source",f.getAbsolutePath()).putString("name",name).apply();
@@ -168,13 +174,32 @@ public final class MediaEngine {
         });
     }
     Process ffmpeg(Context c, List<String> args) throws Exception {
+        return nativeProcess(c,"libffmpeg.so",args);
+    }
+    Process nativeProcess(Context c, String binary, List<String> args) throws Exception {
         init(c); checkCancel();
-        List<String> command=new ArrayList<>(); command.add(c.getApplicationInfo().nativeLibraryDir+"/libffmpeg.so"); command.addAll(args);
+        List<String> command=new ArrayList<>(); command.add(c.getApplicationInfo().nativeLibraryDir+"/"+binary); command.addAll(args);
         ProcessBuilder b=new ProcessBuilder(command).redirectErrorStream(true);
         String packages=new File(c.getNoBackupFilesDir(),"youtubedl-android/packages").getAbsolutePath();
         b.environment().put("LD_LIBRARY_PATH",packages+"/ffmpeg/usr/lib:"+packages+"/python/usr/lib");
         b.environment().put("TMPDIR",c.getCacheDir().getAbsolutePath());
         process=b.start(); return process;
+    }
+    MediaInfo probe(Context c, File f) throws Exception {
+        Process p=nativeProcess(c,"libffprobe.so",Arrays.asList("-v","quiet","-show_entries","stream=codec_type,width,height,duration:stream_disposition=attached_pic:stream_tags=rotate:stream_side_data=rotation:format=duration","-of","json",f.getAbsolutePath()));
+        StringBuilder json=new StringBuilder();
+        try(BufferedReader reader=new BufferedReader(new InputStreamReader(p.getInputStream(),java.nio.charset.StandardCharsets.UTF_8))) {
+            char[] buffer=new char[4096];int n;
+            while((n=reader.read(buffer))!=-1) { checkCancel();json.append(buffer,0,n);if(json.length()>1024*1024) {p.destroy();throw new IOException("Medya bilgileri beklenenden büyük.");} }
+        }
+        int code=p.waitFor();checkCancel();
+        if(code!=0) throw new IOException("Dosyanın video bilgileri okunamadı. İçerik eksik veya desteklenmeyen bir biçimde olabilir.");
+        return MediaInfo.fromProbe(json.toString());
+    }
+    private static double metadataNumber(String value) {
+        if(value==null) return 0;
+        try { double n=Double.parseDouble(value);return Double.isFinite(n)&&n>0?n:0; }
+        catch(NumberFormatException ignored) {return 0;}
     }
     public void export(Context c, EditSpec spec) {
         if (source == null) return;

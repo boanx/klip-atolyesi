@@ -2,7 +2,7 @@
 
 X bağlantısından video alma, telefondan video/GIF açma ve kaynak biçiminden bağımsız MP4 ya da hareketli GIF üretme uygulaması. Türkçe, reklamsız; düzenleme cihaz üzerinde çalışır. Android 10 ve üzeri; ARM64, ARMv7 ve x86_64 işlemciler.
 
-**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.0.0.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
+**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.0.1.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
 
 APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle doğrulanmıştır. Fiziksel telefonda ayrıca test edilmemiştir.
 
@@ -35,7 +35,7 @@ Android Studio, JDK 17 veya daha yenisi (bu teslimde JDK 25), Android SDK 36 / B
 
 ```powershell
 .\gradlew.bat assembleDebug
-.\gradlew.bat testDebugUnitTest lintDebug
+.\gradlew.bat testReleaseUnitTest lintRelease
 .\gradlew.bat assembleRelease assembleReleaseAndroidTest
 ```
 
@@ -61,3 +61,7 @@ adb shell am instrument -w com.klipatolyesi.app.test/com.klipatolyesi.app.Engine
 ```
 
 GPL-3.0 kapsamında dağıtılır. Bağımlılıklar ve kaynak bağlantıları: `THIRD_PARTY_NOTICES.txt`.
+
+## 1.0.1 düzeltmesi
+
+Android'in bazı MP4 dosyalarında görüntü boyutunu veya süreyi boş döndürmesi nedeniyle görülen `s == null` hatası giderildi. Android bilgileri okuyamazsa uygulama kendi FFprobe ikilisiyle dosyayı analiz eder; eksik bilgiler artık doğrudan sayıya çevrilmez. Bildirilen gönderide indirme, MP4 ve GIF kaydı yeniden test edildi. 1.0.0 üzerine uygulamayı kaldırmadan güncellenebilir.

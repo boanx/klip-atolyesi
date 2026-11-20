@@ -16,7 +16,8 @@ public class EngineInstrumentation extends Instrumentation {
     private final ArrayList<Uri> outputs=new ArrayList<>();
     private void check(boolean yes,String message) throws Exception {if(!yes)throw new Exception(message);report.append("PASS: ").append(message).append('\n');}
     private String networkUrl;
-    public void onCreate(Bundle args) {super.onCreate(args);networkUrl=args.getString("networkUrl");start();}
+    private boolean skipUpdate;
+    public void onCreate(Bundle args) {super.onCreate(args);networkUrl=args.getString("networkUrl");skipUpdate=Boolean.parseBoolean(args.getString("skipUpdate","false"));start();}
     private void waitJob() throws Exception {
         long deadline=System.currentTimeMillis()+180000;
         while(MediaEngine.I.busy && System.currentTimeMillis()<deadline)Thread.sleep(100);
@@ -30,9 +31,19 @@ public class EngineInstrumentation extends Instrumentation {
             startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             Thread.sleep(1000);if(e.busy)waitJob();
             if(networkUrl!=null) {
-                runOnMainSync(()->e.update(c));waitJob();
+                if(!skipUpdate) {runOnMainSync(()->e.update(c));waitJob();}
                 runOnMainSync(()->e.download(c,networkUrl));waitJob();
                 check(e.source!=null && e.duration>0,"Gerçek X gönderisi indirildi: "+networkUrl+" · "+e.duration+" sn");
+                check(e.width>0 && e.height>0,"İndirilen kaynağın boyutu okundu: "+e.width+"×"+e.height);
+                Process diagnostic=e.nativeProcess(c,"libffprobe.so",List.of("-v","quiet","-show_entries","stream=codec_name,width,height,duration:format=format_name,duration","-of","json",e.source.getAbsolutePath()));
+                report.append("PROBE: ").append(new String(diagnostic.getInputStream().readAllBytes())).append('\n');diagnostic.waitFor();
+                EditSpec downloaded=new EditSpec();downloaded.width=e.width;downloaded.height=e.height;downloaded.start=0;downloaded.end=Math.min(2,e.duration);downloaded.maxWidth=480;
+                runOnMainSync(()->e.export(c,downloaded));waitJob();
+                check(e.result!=null && "video/mp4".equals(e.resultMime),"X içeriği MP4 olarak galeriye kaydedildi");
+                try(MediaMetadataRetriever r=new MediaMetadataRetriever()) {r.setDataSource(c,e.result);check(r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)!=null,"MP4 çıktısı Android tarafından okunabiliyor");}
+                downloaded.gif=true;
+                runOnMainSync(()->e.export(c,downloaded));waitJob();
+                try(InputStream in=c.getContentResolver().openInputStream(e.result)) {Movie movie=Movie.decodeStream(in);check(movie!=null && movie.width()>0 && movie.duration()>0,"X içeriği hareketli GIF olarak galeriye kaydedildi");}
                 result.putString("stream",report.toString());finish(Activity.RESULT_OK,result);return;
             }
             File input=new File(c.getCacheDir(),"fixture.mp4");

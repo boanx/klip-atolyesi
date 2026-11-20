@@ -5,3 +5,4 @@ local.properties
 *.jks
 release-signing.properties
 teslim/
+.codex-attachments/

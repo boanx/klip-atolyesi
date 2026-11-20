@@ -18,3 +18,10 @@
 - APK imzası: Android APK Signature Scheme v2 doğrulaması başarılı; 3072 bit RSA.
 
 Fiziksel Android telefonda ve tüm üretici/Android sürümü kombinasyonlarında test edilmemiştir. X erişim davranışı gönderiye, ağa ve platform değişikliklerine göre farklılaşabilir.
+
+## 1.0.1 regresyon denetimleri
+
+- Bildirilen `s == null` hatası 1.0.0'da aynı gönderiyle tekrarlandı.
+- Boş Android meta verisi, eksik süre, format/akış süresi yedeği, kapak görseli ve döndürme bilgisi için 6 yeni birim testi eklendi; toplam 15 birim testi başarılı.
+- FFprobe ikilisiyle dosya bilgileri okundu; bildirilen gönderi indirme → MP4 → GIF akışıyla doğrulandı.
+- Aynı release imzasıyla 1.0.0 üzerine 1.0.1 kuruldu.
