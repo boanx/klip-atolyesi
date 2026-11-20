@@ -1,0 +1,25 @@
+KLİP ATÖLYESİ 1.0 — ANDROID
+
+1. Klip-Atolyesi-1.0.0.apk dosyasını Android telefonunuza aktarın.
+2. Dosyayı açın. Android isterse dosyayı açtığınız uygulamaya
+   “Bilinmeyen uygulamaları yükle” iznini verin ve Yükle'ye dokunun.
+3. Klip Atölyesi'ni açın.
+4. X gönderisi bağlantısını yapıştırıp “X’ten indir”e dokunun.
+   X’in paylaş menüsünden de Klip Atölyesi'ni seçebilirsiniz.
+5. Süreyi kesin, kırpın, hız/döndürme/görünüm seçeneklerini ayarlayın.
+6. MP4 veya GIF seçip “Galeriye kaydet”e dokunun.
+
+Telefonunuzdaki video ve GIF’leri “Telefondan video / GIF aç” ile
+aynı şekilde düzenleyebilirsiniz.
+
+Android 10 veya daha yenisi gerekir. Reklam ve abonelik yoktur.
+GIF çıktısı sessizdir ve en fazla 60 saniyedir. Gizli, silinmiş veya
+giriş gerektiren X gönderileri desteklenmeyebilir. İndirme sorununda
+uygulamadaki “İndirme motorunu güncelle” düğmesini deneyin.
+
+Videolar: Movies/KlipAtolyesi
+GIF'ler: Pictures/KlipAtolyesi
+
+Doğrulama: Android 15 emülatöründe gerçek X indirmesi,
+MP4/GIF dönüşümleri, kesme, kırpma, döndürme, hız ve ses testleri.
+Fiziksel Android telefonda ayrıca test edilmemiştir.

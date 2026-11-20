@@ -1,0 +1,42 @@
+Klip Atölyesi 1.0.0
+Copyright (C) 2026 Klip Atölyesi contributors
+Application source: GPL-3.0-or-later, provided alongside the APK.
+No warranty; see LICENSE.txt.
+
+Bundled direct dependencies:
+
+1. youtubedl-android library, common and ffmpeg 0.18.1
+   https://github.com/yausername/youtubedl-android/tree/0.18.1
+   https://github.com/yausername/youtubedl-android
+   License: GNU GPL v3.
+   Native build instructions:
+   https://github.com/yausername/youtubedl-android/blob/master/BUILD_FFMPEG.md
+   https://github.com/yausername/youtubedl-android/blob/master/BUILD_PYTHON.md
+   Maven artifacts: https://repo.maven.apache.org/maven2/io/github/junkfood02/youtubedl-android/
+
+2. yt-dlp, bundled with youtubedl-android; optional user-triggered updates
+   https://github.com/yt-dlp/yt-dlp
+   https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE
+   https://github.com/xibr/ytdlp-lazy
+   yt-dlp source is Unlicense, with separately licensed dependencies.
+
+3. FFmpeg and native codec dependencies, bundled by youtubedl-android
+   https://ffmpeg.org/
+   https://ffmpeg.org/legal.html
+   Source: https://git.ffmpeg.org/ffmpeg.git
+   Termux packaging/build patches: https://github.com/termux/termux-packages
+   Build is GPL-enabled (includes libx264). Runtime version/configuration is
+   included in the delivery verification folder after device tests.
+
+4. Python runtime and bundled native dependencies
+   https://www.python.org/
+   https://docs.python.org/3/license.html
+   See the upstream youtubedl-android build instructions above for packaging.
+
+5. Transitive Java/Kotlin dependencies include AndroidX, Kotlin, Jackson,
+   Apache Commons IO and Commons Compress. Their original license/notice
+   resources, as found in the Maven artifacts, are provided under licenses/.
+   dependency-tree.txt records the resolved release runtime dependencies.
+
+Names and marks remain the property of their respective owners. This app is
+not affiliated with X Corp., Twitter, Seal or the dependency maintainers.

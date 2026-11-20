@@ -1,0 +1,74 @@
+plugins { id 'com.android.application' }
+
+def signingFile = rootProject.file('release-signing.properties')
+def signingValues = new Properties()
+if (signingFile.exists()) signingFile.withInputStream { signingValues.load(it) }
+
+android {
+    namespace 'com.klipatolyesi.app'
+    compileSdk 36
+    testBuildType 'release'
+    defaultConfig {
+        applicationId 'com.klipatolyesi.app'
+        minSdk 29
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        ndk { abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64' }
+        testInstrumentationRunner 'com.klipatolyesi.app.EngineInstrumentation'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        localRelease {
+            if (signingFile.exists()) {
+                storeFile rootProject.file(signingValues['storeFile'])
+                storePassword signingValues['storePassword']
+                keyAlias signingValues['keyAlias']
+                keyPassword signingValues['keyPassword']
+            }
+        }
+    }
+    packaging {
+        jniLibs { useLegacyPackaging = true }
+        resources { excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE*', 'META-INF/NOTICE*'] }
+    }
+    buildTypes { release { minifyEnabled false; signingConfig signingFile.exists() ? signingConfigs.localRelease : signingConfigs.debug } }
+}
+
+dependencies {
+    implementation 'io.github.junkfood02.youtubedl-android:library:0.18.1'
+    implementation 'io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.register('exportDependencyNotices') {
+    doLast {
+        def base = rootProject.file('licenses')
+        base.mkdirs()
+        def inventory = []
+        configurations.releaseRuntimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id.toString()
+            inventory.add(id)
+            def folder = new File(base, id.replace(':','_'))
+            def unpackNotices = { java.util.zip.ZipInputStream zip ->
+                try {
+                    for (def entry = zip.nextEntry; entry != null; entry = zip.nextEntry) {
+                        if (!entry.directory && entry.name ==~ /(?i).*\/(LICENSE[^\/]*|NOTICE[^\/]*|COPYING[^\/]*)/ || !entry.directory && entry.name ==~ /(?i)(LICENSE[^\/]*|NOTICE[^\/]*|COPYING[^\/]*)/) {
+                            folder.mkdirs()
+                            new File(folder,entry.name.replaceAll('[^a-zA-Z0-9._-]','_')).bytes=zip.readAllBytes()
+                        }
+                    }
+                } finally { zip.close() }
+            }
+            if(artifact.file.name.endsWith('.jar')) unpackNotices(new java.util.zip.ZipInputStream(new FileInputStream(artifact.file)))
+            if(artifact.file.name.endsWith('.aar')) {
+                def aar=new java.util.zip.ZipFile(artifact.file)
+                try {
+                    def classes=aar.getEntry('classes.jar')
+                    if(classes!=null) unpackNotices(new java.util.zip.ZipInputStream(aar.getInputStream(classes)))
+                } finally { aar.close() }
+            }
+        }
+        rootProject.file('dependency-tree.txt').text=inventory.sort().join('\n')+'\n'
+    }
+}
