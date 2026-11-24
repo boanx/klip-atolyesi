@@ -17,7 +17,8 @@ public class EngineInstrumentation extends Instrumentation {
     private void check(boolean yes,String message) throws Exception {if(!yes)throw new Exception(message);report.append("PASS: ").append(message).append('\n');Bundle stage=new Bundle();stage.putString("stream","PASS: "+message+"\n");sendStatus(0,stage);}
     private String networkUrl;
     private boolean skipUpdate;
-    public void onCreate(Bundle args) {super.onCreate(args);networkUrl=args.getString("networkUrl");skipUpdate=Boolean.parseBoolean(args.getString("skipUpdate","false"));start();}
+    private boolean benchmarkStickers;
+    public void onCreate(Bundle args) {super.onCreate(args);networkUrl=args.getString("networkUrl");skipUpdate=Boolean.parseBoolean(args.getString("skipUpdate","false"));benchmarkStickers=Boolean.parseBoolean(args.getString("benchmarkStickers","false"));start();}
     private void waitJob() throws Exception {
         long deadline=System.currentTimeMillis()+180000;
         while(MediaEngine.I.busy && System.currentTimeMillis()<deadline)Thread.sleep(100);
@@ -30,6 +31,10 @@ public class EngineInstrumentation extends Instrumentation {
             Context c=getTargetContext();MediaEngine e=MediaEngine.I;
             Activity activity=startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             Thread.sleep(1000);if(e.busy)waitJob();
+            if(benchmarkStickers) {
+                StickerSpeedCheck.run(this,c,message->{report.append(message).append('\n');Bundle stage=new Bundle();stage.putString("stream",message+"\n");sendStatus(0,stage);});
+                result.putString("stream",report.toString());finish(Activity.RESULT_OK,result);return;
+            }
             if(networkUrl!=null) {
                 if(!skipUpdate) {runOnMainSync(()->e.update(c));waitJob();}
                 runOnMainSync(()->e.download(c,networkUrl));waitJob();
@@ -87,7 +92,8 @@ public class EngineInstrumentation extends Instrumentation {
             check(after==before+3,"GIF arayüz düğmesi üç kalıcı çıkartma oluşturdu");
             StickerStore.Pack stickerPack=stickerPacks.get(stickerPacks.size()-1);
             check(stickerPack.stickers.size()>=3,"WhatsApp paketi en az üç çıkartma içeriyor");
-            File stickerAsset=StickerStore.asset(c,stickerPack.id,stickerPack.stickers.get(0));
+            String newestSticker=stickerPack.stickers.get(stickerPack.stickers.size()-1);
+            File stickerAsset=StickerStore.asset(c,stickerPack.id,newestSticker);
             WebpInfo webp=WebpInfo.read(stickerAsset);webp.validateSticker();
             check(webp.width==512 && webp.height==512 && webp.frames>=2 && webp.durationMs<=10000 && stickerAsset.length()<=500*1024,"Gerçek WebP: 512×512, hareketli, ≤10 sn, ≤500 KB · "+stickerAsset.length()+" bayt");
             android.graphics.drawable.Drawable decoded=android.graphics.ImageDecoder.decodeDrawable(android.graphics.ImageDecoder.createSource(stickerAsset));
@@ -101,7 +107,7 @@ public class EngineInstrumentation extends Instrumentation {
             try(android.database.Cursor cursor=c.getContentResolver().query(Uri.parse(provider+"/stickers/"+stickerPack.id),null,null,null,null)) {
                 check(cursor!=null && cursor.getCount()==stickerPack.stickers.size(),"WhatsApp çıkartma listesi kalıcı paketle eşleşiyor");
             }
-            Uri stickerUri=Uri.parse(provider+"/stickers_asset/"+stickerPack.id+"/"+stickerPack.stickers.get(0));
+            Uri stickerUri=Uri.parse(provider+"/stickers_asset/"+stickerPack.id+"/"+newestSticker);
             try(android.content.res.AssetFileDescriptor asset=c.getContentResolver().openAssetFileDescriptor(stickerUri,"r");InputStream bytes=asset.createInputStream()) {
                 check(new String(bytes.readNBytes(4),java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF"),"WhatsApp sağlayıcısından gerçek dosya okunabiliyor");
             }

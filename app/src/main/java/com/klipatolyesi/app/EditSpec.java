@@ -23,7 +23,7 @@ public final class EditSpec {
         if (gif && (end-start)/speed > 60) throw new IllegalArgumentException("GIF için en fazla 60 saniyelik bir bölüm seçin veya hızı artırın.");
     }
 
-    public String videoFilter() {
+    public String spatialFilter() {
         List<String> f = new ArrayList<>();
         int x = (int)(width*left)/2*2, y = (int)(height*top)/2*2;
         int w = Math.max(2, (int)(width*(right-left))/2*2);
@@ -36,6 +36,12 @@ public final class EditSpec {
         if (filter == 1) f.add("eq=contrast=1.08:saturation=1.25");
         if (filter == 2) f.add("hue=s=0");
         if (filter == 3) f.add("colorbalance=rs=.08:bs=-.06");
+        return String.join(",", f);
+    }
+
+    public String videoFilter() {
+        List<String> f=new ArrayList<>();
+        f.add(spatialFilter());
         f.add("setpts=(PTS-STARTPTS)/"+n(speed));
         f.add("scale=w='min("+maxWidth+",iw)':h=-2:flags=lanczos");
         f.add("setsar=1");

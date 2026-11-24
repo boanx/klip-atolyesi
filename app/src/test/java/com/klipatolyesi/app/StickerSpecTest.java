@@ -11,5 +11,7 @@ public class StickerSpecTest {
     @Test public void usesPlaybackDuration(){EditSpec e=edit();e.end=20;e.speed=2;StickerSpec.validate(e,20);}
     @Test(expected=IllegalArgumentException.class)public void rejectsSingleShortFrame(){EditSpec e=edit();e.end=.05;StickerSpec.validate(e,20);}
     @Test(expected=IOException.class)public void rejectsTruncatedWebp()throws Exception{WebpInfo.read(new byte[12]);}
+    @Test public void longClipsStartWithSmallerFrameBudget(){assertTrue(StickerSpec.initialFps(10)<StickerSpec.initialFps(2));assertTrue(StickerSpec.initialQuality(10)<StickerSpec.initialQuality(2));}
+    @Test public void sizeOvershootChoosesLargerQualityDrop(){assertTrue(StickerSpec.nextQuality(60,1000000)<StickerSpec.nextQuality(60,550000));assertTrue(StickerSpec.nextQuality(8,1000000)>=8);}
     @Test public void acceptsBoundariesRejectsDurationAndSize()throws Exception{WebpInfo w=new WebpInfo();w.width=w.height=512;w.frames=2;w.durationMs=10000;w.minFrameMs=100;w.animation=true;w.loopCount=0;w.validateSticker();w.durationMs=10001;try{w.validateSticker();fail("Too long");}catch(IOException expected){}w.durationMs=9000;w.width=511;try{w.validateSticker();fail("Wrong dimensions");}catch(IOException expected){}}
 }

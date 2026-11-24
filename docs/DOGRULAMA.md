@@ -48,3 +48,19 @@ Fiziksel Android telefonda ve tüm üretici/Android sürümü kombinasyonlarınd
 - Paket dışındaki özel dosyaların açılması engellendi; dış istemcinin WhatsApp okuma izni olmadan sorgusu reddedildi.
 - WhatsApp ve WhatsApp Business için resmi paket ekleme intent'i kullanılır.
 - Emülatörde WhatsApp kurulu değildir; WhatsApp içindeki son ekleme/onay ekranı burada uçtan uca test edilmemiştir.
+
+## 1.1.1: süre karşılaştırması
+
+24 Kasım 2026 · Aynı Android 15 x86_64 emülatörü, aynı üretilmiş örnek dosyalar. İlk dönüştürmeler ölçüldü; önbellek kazancı ayrıca ölçüldü. Eski ayarlar testte 1.1.0 kodundaki altı profil ve sıkıştırma seviyesi 6 kullanılarak yeniden çalıştırıldı. Yeni yol hızlı kodlama ve süreye göre ilk kalite/kare hızı ayarını kullanır; bu kıyas eşit görüntü kalitesi garantisi vermez.
+
+| Örnek | Eski süre | Yeni süre | Eski/yeni deneme | Yeni dosya |
+|---|---:|---:|---:|---:|
+| 2 saniyelik GIF | 7.193 ms | 202 ms | 1 / 1 | 152.764 bayt |
+| 10 saniyelik çıktı | 91.620 ms | 478 ms | 3 / 1 | 461.130 bayt |
+
+- İki çıktı da Android tarafından hareketli WebP olarak açıldı; 512×512, en fazla 10 saniye ve 500 KB doğrulamalarından geçti.
+- Aynı kaynak ve ayarlar: 1 ve 3 ms içinde önbellekten bayt bayt aynı dosya alındı.
+- Seçilen süre değiştiğinde önbelleğin kullanılmadığı ve yeni dosyanın geçerli olduğu doğrulandı.
+- Karşılaştırma komutu: `adb shell am instrument -w -e benchmarkStickers true com.klipatolyesi.app.test/com.klipatolyesi.app.EngineInstrumentation`.
+- Bu iki test örneğinin sonuçları tüm dosyalara/telefonlara genellenemez. Daha hızlı profil kalite ve kare hızı bakımından farklı sonuçlar verebilir.
+- Son release APK'sında paket kaydı/sağlayıcı, şeffaf kenarlar, MP4/GIF dönüşümü ve 10 saniye çıkartma sınırı regresyonları geçti. 23 birim testi başarılı, Android Lint release denetiminde hata yok.

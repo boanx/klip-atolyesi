@@ -123,7 +123,7 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         LinearLayout outputRow=row(outputCard);open=button("Dosyayı aç",false);share=button("Paylaş",true);outputRow.addView(open,weight());outputRow.addView(share,weight());
         open.setOnClickListener(v -> output(false));share.setOnClickListener(v -> output(true));
         LinearLayout footer=card(root);update=button("İndirme motorunu güncelle",false);footer.addView(update);update.setOnClickListener(v -> {notifications();engine.update(this);});
-        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.1.0 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X veya WhatsApp ile bağlantılı değildir.",12,MUTED));
+        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.1.1 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X veya WhatsApp ile bağlantılı değildir.",12,MUTED));
         Button about=button("Kullanım ve açık kaynak lisansları",false);footer.addView(about);about.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("Klip Atölyesi").setMessage("Yalnızca kaydetme ve kullanma hakkınız bulunan içerikleri işleyin.\n\nİndirme: yt-dlp / youtubedl-android\nDönüştürme: FFmpeg\nUygulama ve bağımlılıklar GPL-3.0 kapsamında sunulur. Kaynak kod teslim paketindedir.\n\nhttps://github.com/yausername/youtubedl-android\nhttps://github.com/yt-dlp/yt-dlp\nhttps://ffmpeg.org\n\nUygulama geliştiricisine dosya veya analiz verisi gönderilmez. X indirmeleri X sunucularıyla; motor güncellemesi GitHub ile iletişim kurar.").setPositiveButton("Tamam",null).show());
         engine.listener=this;
         if(state!=null) { url.setText(state.getString("url","")); }
@@ -142,6 +142,7 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         quickSaveCard.setVisibility(engine.source==null?View.GONE:View.VISIBLE);
         editor.setVisibility(engine.source==null?View.GONE:View.VISIBLE);outputCard.setVisibility(engine.result==null?View.GONE:View.VISIBLE);
         crop.setEnabled(!engine.busy);
+        gif.setAnimating(!engine.busy);
         if(engine.source!=null && !loaded.equals(engine.source.getAbsolutePath())) {
             loaded=engine.source.getAbsolutePath();video.stopPlayback();gif.clear();previewError.setVisibility(View.GONE);
             crop.media(engine.width,engine.height);cropPreset.setSelection(0);

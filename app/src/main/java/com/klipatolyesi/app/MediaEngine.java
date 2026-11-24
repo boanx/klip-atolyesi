@@ -251,23 +251,57 @@ public final class MediaEngine {
         submit(c,"WhatsApp çıkartması hazırlanıyor…",ctx -> {
             File out=new File(ctx.getCacheDir(),"sticker-"+System.nanoTime()+".webp");
             try {
-                int[][] attempts={{80,10},{60,10},{40,10},{25,10},{20,8},{15,5}};boolean valid=false;
-                String tail="";
-                for(int attempt=0;attempt<attempts.length;attempt++) {
-                    checkCancel();state("Çıkartma oluşturuluyor · boyut ayarı "+(attempt+1)+"/"+attempts.length,-1);
-                    Process p=ffmpeg(ctx,StickerSpec.args(spec,input.getAbsolutePath(),out.getAbsolutePath(),attempts[attempt][0],attempts[attempt][1]));
-                    StringBuilder log=new StringBuilder();
-                    try(BufferedReader reader=new BufferedReader(new InputStreamReader(p.getInputStream()))) {String line;while((line=reader.readLine())!=null){log.append(line).append('\n');if(log.length()>6000)log.delete(0,3000);}}
-                    int code=p.waitFor();checkCancel();tail=log.toString();
-                    if(code!=0)throw new IOException("Çıkartma dönüştürülemedi.\n"+tail);
-                    if(out.length()>StickerSpec.MAX_BYTES)continue;
-                    try{WebpInfo.read(out).validateSticker();valid=true;break;}catch(IOException ignored){}
-                }
-                if(!valid)throw new IOException("Çıkartma 500 KB ve 10 saniye sınırına sığmadı. Daha kısa bir bölüm seçin.");
+                encodeSticker(ctx,input,spec,out);
                 checkCancel();lastStickerPack=StickerStore.add(ctx,out);
                 state("Hareketli çıkartma pakete kaydedildi. Pakette en az 3 çıkartma olduğunda WhatsApp’a ekleyebilirsiniz.",100);
             } finally {out.delete();}
         });
+    }
+    static final class StickerEncoding {
+        final long elapsedMs;final int attempts;final boolean cached;
+        StickerEncoding(long elapsedMs,int attempts,boolean cached){this.elapsedMs=elapsedMs;this.attempts=attempts;this.cached=cached;}
+    }
+    StickerEncoding encodeSticker(Context c,File input,EditSpec spec,File out) throws Exception {
+        long started=SystemClock.elapsedRealtime();checkCancel();
+        double seconds=(spec.end-spec.start)/spec.speed;
+        int quality=StickerSpec.initialQuality(seconds),fps=StickerSpec.initialFps(seconds);
+        String identity="fast-sticker-v1\n"+input.length()+":"+input.lastModified()+"\n"+String.join("\n",StickerSpec.args(spec,input.getAbsolutePath(),"output.webp",quality,fps));
+        byte[] digest=java.security.MessageDigest.getInstance("SHA-256").digest(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        StringBuilder keyBuilder=new StringBuilder();for(byte b:digest)keyBuilder.append(String.format(Locale.US,"%02x",b&255));String key=keyBuilder.toString();
+        File cachedFile=new File(c.getCacheDir(),"last-sticker-fast.webp");SharedPreferences prefs=c.getSharedPreferences("sticker-cache",0);
+        if(key.equals(prefs.getString("key","")) && cachedFile.isFile()) {
+            try {
+                WebpInfo.read(cachedFile).validateSticker();copy(new FileInputStream(cachedFile),new FileOutputStream(out));
+                state("Hazır çıkartma kullanılıyor…",99);return new StickerEncoding(SystemClock.elapsedRealtime()-started,0,true);
+            }catch(IOException e){checkCancel();prefs.edit().remove("key").apply();}
+        }
+        for(int attempt=1;attempt<=StickerSpec.MAX_ATTEMPTS;attempt++) {
+            checkCancel();String label=attempt==1?"Çıkartma oluşturuluyor…":"Çıkartma boyutu ayarlanıyor · "+attempt+"/"+StickerSpec.MAX_ATTEMPTS;
+            state(label,-1);Process p=ffmpeg(c,StickerSpec.args(spec,input.getAbsolutePath(),out.getAbsolutePath(),quality,fps));
+            StringBuilder log=new StringBuilder();
+            try(BufferedReader reader=new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                String line;while((line=reader.readLine())!=null) {
+                    log.append(line).append('\n');if(log.length()>6000)log.delete(0,3000);
+                    if(line.startsWith("out_time_us="))try {double time=Double.parseDouble(line.substring(12))/1e6;state(label,Math.max(0,Math.min(99,(int)(time*100/seconds))));}catch(NumberFormatException ignored){}
+                }
+            }
+            int code=p.waitFor();checkCancel();if(code!=0)throw new IOException("Çıkartma dönüştürülemedi.\n"+log);
+            if(out.length()<=StickerSpec.MAX_BYTES) {
+                try {
+                    WebpInfo.read(out).validateSticker();cacheSticker(out,cachedFile,key,prefs);
+                    return new StickerEncoding(SystemClock.elapsedRealtime()-started,attempt,false);
+                }catch(IOException invalid){checkCancel();}
+            }
+            quality=StickerSpec.nextQuality(quality,out.length());fps=attempt==1?Math.min(fps,8):5;
+        }
+        throw new IOException("Çıkartma 500 KB ve 10 saniye sınırına sığmadı. Daha kısa bir bölüm seçin.");
+    }
+    private void cacheSticker(File out,File cache,String key,SharedPreferences prefs) throws Exception {
+        android.util.AtomicFile atomic=new android.util.AtomicFile(cache);FileOutputStream stream=null;
+        try {
+            stream=atomic.startWrite();try(InputStream in=new FileInputStream(out)){byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))!=-1){checkCancel();stream.write(buffer,0,n);}}
+            atomic.finishWrite(stream);prefs.edit().putString("key",key).apply();
+        }catch(IOException failure){if(stream!=null)atomic.failWrite(stream);prefs.edit().remove("key").apply();checkCancel();}
     }
     private String friendly(Exception e) {
         String msg=e.getMessage()==null?e.toString():e.getMessage();

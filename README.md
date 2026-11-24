@@ -2,7 +2,7 @@
 
 X bağlantısından video alma, telefondan video/GIF açma ve kaynak biçiminden bağımsız MP4 ya da hareketli GIF üretme uygulaması. Türkçe, reklamsız; düzenleme cihaz üzerinde çalışır. Android 10 ve üzeri; ARM64, ARMv7 ve x86_64 işlemciler.
 
-**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.1.0.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
+**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.1.1.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
 
 APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle doğrulanmıştır. Fiziksel telefonda ayrıca test edilmemiştir.
 
@@ -24,6 +24,8 @@ Videolar `Movies/KlipAtolyesi`, GIF’ler `Pictures/KlipAtolyesi` klasörüne ka
 4. Pakette en az **3 çıkartma** olduğunda **WhatsApp’a ekle** düğmesine dokunun. WhatsApp’ın açtığı ekleme ekranını onaylayın. WhatsApp ve WhatsApp Business birlikte yüklüyse uygulama seçebilirsiniz.
 
 Çıkartmalar 512×512 piksel, en fazla 10 saniye ve 500 KB olur. Şeffaf kenarlar eklenerek görüntü kareye sığdırılır; görüntünün kendi arka planı otomatik kaldırılmaz. Kaynak genişliği/uzunluğu korunur; genel GIF/video genişlik seçeneği çıkartmanın 512×512 ölçüsünü değiştirmez. Karmaşık görüntülerde 500 KB için kalite ve kare hızı otomatik düşürülür. Sınıra sığmayan içerikte daha kısa bölüm seçmeniz istenir.
+
+Çıkartma oluşturma artık hızlı profili kullanır: kısa içerikler 10, uzun içerikler 8 kare/sn ile başlar; gerekirse dosya boyutuna göre kalite/kare hızı düşürülür. Aynı kaynak ve aynı ayarlarla son oluşturulan çıkartma tekrar istendiğinde doğrulanmış önbellek sonucu kullanılır. Farklı kesme/kırpma/hız ayarları yeniden dönüştürülür. Önizleme işlem sırasında duraklatılarak kaynak tüketimi azaltılır.
 
 Paketler uygulamanın özel depolamasında kalıcı olarak saklanır; başka bir GIF açmak önceki çıkartmaları silmez. Her pakette 3–30 çıkartma bulunur. Son paket dolunca yeni paket açılır; en fazla 10 paket desteklenir. WhatsApp yüklenmemişse çıkartma oluşturabilirsiniz; eklemek için WhatsApp veya WhatsApp Business gerekir.
 
@@ -88,3 +90,9 @@ Dosya açıldığında görünen **GIF olarak kaydet** ve **Video (MP4) olarak k
 ## 1.1.0: WhatsApp çıkartmaları
 
 Hareketli WebP oluşturma, otomatik boyut optimizasyonu, kalıcı çıkartma paketleri ve WhatsApp/WhatsApp Business’a kullanıcı onayıyla paket ekleme desteği eklendi. GIF ve MP4 kaydı korunur.
+
+## 1.1.1: çıkartma oluşturma hızı
+
+Ağır sıkıştırma kaldırıldı, gereksiz ölçekleme ve kare işleme azaltıldı. Dosya boyutuna göre en fazla üç dönüştürme denemesi yapılır. Son çıkartma, aynı kaynak ve ayarlarda tekrar kullanılabilir. Hız için kalite/kare hızı otomatik ayarlanır; 512×512, hareketli WebP, 10 saniye ve 500 KB koşulları korunur.
+
+Aynı emülatör ve kaynaklarla yapılan karşılaştırmada 2 saniyelik GIF 7.193 ms → 202 ms, 10 saniyelik çıktı 91.620 ms → 478 ms oldu. Bunlar test örneklerinin ölçümleridir; dosya karmaşıklığı ve telefona göre süre değişir. Ayrıntılar: [doğrulama kaydı](docs/DOGRULAMA.md).

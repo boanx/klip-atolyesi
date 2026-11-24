@@ -1,6 +1,6 @@
-KLİP ATÖLYESİ 1.1.0 — ANDROID
+KLİP ATÖLYESİ 1.1.1 — ANDROID
 
-1. Klip-Atolyesi-1.1.0.apk dosyasını Android telefonunuza aktarın.
+1. Klip-Atolyesi-1.1.1.apk dosyasını Android telefonunuza aktarın.
 2. Dosyayı açın. Android isterse dosyayı açtığınız uygulamaya
    “Bilinmeyen uygulamaları yükle” iznini verin ve Yükle'ye dokunun.
 3. Klip Atölyesi'ni açın.
