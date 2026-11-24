@@ -14,7 +14,7 @@ import java.util.*;
 public class EngineInstrumentation extends Instrumentation {
     private StringBuilder report=new StringBuilder();
     private final ArrayList<Uri> outputs=new ArrayList<>();
-    private void check(boolean yes,String message) throws Exception {if(!yes)throw new Exception(message);report.append("PASS: ").append(message).append('\n');}
+    private void check(boolean yes,String message) throws Exception {if(!yes)throw new Exception(message);report.append("PASS: ").append(message).append('\n');Bundle stage=new Bundle();stage.putString("stream","PASS: "+message+"\n");sendStatus(0,stage);}
     private String networkUrl;
     private boolean skipUpdate;
     public void onCreate(Bundle args) {super.onCreate(args);networkUrl=args.getString("networkUrl");skipUpdate=Boolean.parseBoolean(args.getString("skipUpdate","false"));start();}
@@ -80,10 +80,45 @@ public class EngineInstrumentation extends Instrumentation {
             }
             runOnMainSync(()->e.importFile(c,gif));waitJob();
             check(e.sourceGif && e.width==240 && e.height==240,"GIF kaynak olarak açıldı");
+            waitForIdleSync();
+            int before=0;for(StickerStore.Pack pack:StickerStore.list(c))before+=pack.stickers.size();
+            for(int i=0;i<3;i++) {runOnMainSync(()->activity.findViewById(R.id.save_sticker).performClick());waitJob();}
+            List<StickerStore.Pack> stickerPacks=StickerStore.list(c);int after=0;for(StickerStore.Pack pack:stickerPacks)after+=pack.stickers.size();
+            check(after==before+3,"GIF arayüz düğmesi üç kalıcı çıkartma oluşturdu");
+            StickerStore.Pack stickerPack=stickerPacks.get(stickerPacks.size()-1);
+            check(stickerPack.stickers.size()>=3,"WhatsApp paketi en az üç çıkartma içeriyor");
+            File stickerAsset=StickerStore.asset(c,stickerPack.id,stickerPack.stickers.get(0));
+            WebpInfo webp=WebpInfo.read(stickerAsset);webp.validateSticker();
+            check(webp.width==512 && webp.height==512 && webp.frames>=2 && webp.durationMs<=10000 && stickerAsset.length()<=500*1024,"Gerçek WebP: 512×512, hareketli, ≤10 sn, ≤500 KB · "+stickerAsset.length()+" bayt");
+            android.graphics.drawable.Drawable decoded=android.graphics.ImageDecoder.decodeDrawable(android.graphics.ImageDecoder.createSource(stickerAsset));
+            check(decoded instanceof android.graphics.drawable.AnimatedImageDrawable,"Android çıkartmayı hareketli WebP olarak açtı");
+            android.graphics.Bitmap alphaPreview=android.graphics.Bitmap.createBitmap(512,512,android.graphics.Bitmap.Config.ARGB_8888);decoded.setBounds(0,0,512,512);decoded.draw(new android.graphics.Canvas(alphaPreview));
+            check(android.graphics.Color.alpha(alphaPreview.getPixel(0,0))==0,"Çıkartma kenarları şeffaf");alphaPreview.recycle();
+            String provider="content://"+StickerStore.AUTHORITY;
+            try(android.database.Cursor cursor=c.getContentResolver().query(Uri.parse(provider+"/metadata/"+stickerPack.id),null,null,null,null)) {
+                check(cursor!=null && cursor.moveToFirst() && cursor.getInt(cursor.getColumnIndexOrThrow("animated_sticker_pack"))==1,"WhatsApp metadata sözleşmesi hareketli paketi tanımlıyor");
+            }
+            try(android.database.Cursor cursor=c.getContentResolver().query(Uri.parse(provider+"/stickers/"+stickerPack.id),null,null,null,null)) {
+                check(cursor!=null && cursor.getCount()==stickerPack.stickers.size(),"WhatsApp çıkartma listesi kalıcı paketle eşleşiyor");
+            }
+            Uri stickerUri=Uri.parse(provider+"/stickers_asset/"+stickerPack.id+"/"+stickerPack.stickers.get(0));
+            try(android.content.res.AssetFileDescriptor asset=c.getContentResolver().openAssetFileDescriptor(stickerUri,"r");InputStream bytes=asset.createInputStream()) {
+                check(new String(bytes.readNBytes(4),java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF"),"WhatsApp sağlayıcısından gerçek dosya okunabiliyor");
+            }
+            try {c.getContentResolver().openAssetFileDescriptor(Uri.parse(provider+"/stickers_asset/"+stickerPack.id+"/index.json"),"r");throw new Exception("İzinsiz dosya açıldı");}catch(FileNotFoundException expected){report.append("PASS: Listelenmeyen özel dosya erişimi engellendi\n");}
+            Intent whatsapp=StickerStore.addIntent(stickerPack,"com.whatsapp");
+            check("com.whatsapp.intent.action.ENABLE_STICKER_PACK".equals(whatsapp.getAction()) && StickerStore.AUTHORITY.equals(whatsapp.getStringExtra("sticker_pack_authority")),"WhatsApp ekleme intent sözleşmesi doğru");
+            android.content.pm.ProviderInfo providerInfo=c.getPackageManager().getProviderInfo(new ComponentName(c,StickerContentProvider.class),0);
+            check("com.whatsapp.sticker.READ".equals(providerInfo.readPermission),"Sağlayıcı WhatsApp okuma izniyle korunuyor");
             EditSpec back=new EditSpec();back.width=e.width;back.height=e.height;back.start=0;back.end=Math.min(1.5,e.duration);back.filter=2;back.mirror=true;back.mute=true;
             runOnMainSync(()->e.export(c,back));waitJob();Uri converted=e.result;outputs.add(converted);
             try(MediaMetadataRetriever r=new MediaMetadataRetriever()) {r.setDataSource(c,converted);check("240".equals(r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)),"GIF → MP4 dönüştürüldü");check(r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO)==null,"Sessiz çıktı ses içermiyor");}
             runOnMainSync(()->e.importFile(c,Uri.fromFile(input)));waitJob();
+            EditSpec boundary=new EditSpec();boundary.width=e.width;boundary.height=e.height;boundary.start=0;boundary.end=4;boundary.speed=.4;
+            runOnMainSync(()->e.exportSticker(c,boundary));waitJob();
+            List<StickerStore.Pack> finalPacks=StickerStore.list(c);StickerStore.Pack boundaryPack=finalPacks.get(finalPacks.size()-1);
+            File boundaryFile=StickerStore.asset(c,boundaryPack.id,boundaryPack.stickers.get(boundaryPack.stickers.size()-1));WebpInfo boundaryInfo=WebpInfo.read(boundaryFile);boundaryInfo.validateSticker();
+            check(boundaryInfo.durationMs>=9700 && boundaryInfo.durationMs<=10000 && boundaryFile.length()<=StickerSpec.MAX_BYTES,"10 saniyelik çıkartma süre ve boyut sınırına uydu: "+boundaryInfo.durationMs+" ms, "+boundaryFile.length()+" bayt");
             Thread.sleep(700);
             android.graphics.Bitmap screenshot=getUiAutomation().takeScreenshot();
             if(screenshot!=null)try(OutputStream screenshotFile=new FileOutputStream(new File(c.getExternalFilesDir(null),"test-preview.png"))) {screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG,100,screenshotFile);screenshot.recycle();}

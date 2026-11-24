@@ -1,4 +1,5 @@
 <resources>
     <item name="save_gif" type="id" />
     <item name="save_video" type="id" />
+    <item name="save_sticker" type="id" />
 </resources>

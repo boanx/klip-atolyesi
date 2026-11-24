@@ -19,11 +19,11 @@ import java.util.*;
 public class MainActivity extends Activity implements MediaEngine.Listener {
     private static final int BG=0xff101516,CARD=0xff1b2425,ACCENT=0xffa8f078,TEXT=0xfff3f6f2,MUTED=0xffaab7b3;
     private final MediaEngine engine=MediaEngine.I;
-    private LinearLayout root,editor,outputCard,quickSaveCard;
+    private LinearLayout root,editor,outputCard,quickSaveCard,stickerRows;
     private EditText url,start,end;
     private TextView status,error,info,previewError;
     private ProgressBar progress;
-    private Button download,importButton,saveGif,saveVideo,exportGif,exportVideo,cancel,update,play,open,share;
+    private Button download,importButton,saveGif,saveVideo,saveSticker,exportGif,exportVideo,exportSticker,cancel,update,play,open,share;
     private Spinner cropPreset,speed,size,fps,rotate,filter;
     private Switch mute,mirror;
     private VideoView video;
@@ -32,6 +32,7 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
     private SeekBar startSeek,endSeek;
     private String loaded="";
     private boolean syncing;
+    private String stickerSignature="";
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable previewLoop=new Runnable() { public void run() {
         if(video!=null && video.isPlaying()) {
@@ -74,7 +75,13 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         quickSaveCard.addView(text("Kaynak video veya GIF olabilir. Seçili süre ve düzenlemeler uygulanır.",12,MUTED));
         saveGif=button("GIF olarak kaydet",true);saveGif.setId(R.id.save_gif);quickSaveCard.addView(saveGif);saveGif.setOnClickListener(v -> save(true));
         saveVideo=button("Video (MP4) olarak kaydet",false);saveVideo.setId(R.id.save_video);quickSaveCard.addView(saveVideo);saveVideo.setOnClickListener(v -> save(false));
+        saveSticker=button("WhatsApp çıkartması oluştur",false);saveSticker.setId(R.id.save_sticker);quickSaveCard.addView(saveSticker);saveSticker.setOnClickListener(v -> saveSticker());
         quickSaveCard.addView(text("GIF sessiz ve döngülü kaydedilir. En fazla 60 saniye seçebilirsin.",12,MUTED));
+        quickSaveCard.addView(text("Hareketli WhatsApp çıkartması: en fazla 10 saniye. Boyut ve sıkıştırma otomatik ayarlanır.",12,MUTED));
+
+        LinearLayout stickerCard=card(root);heading(stickerCard,"WhatsApp çıkartma paketlerim");
+        stickerCard.addView(text("GIF veya videodan çıkartma oluştur. Her pakette en az 3, en fazla 30 çıkartma bulunur. Yeni çıkartmalar son pakete eklenir; dolunca yeni paket açılır. Arka plan otomatik silinmez, görüntü şeffaf kenarlarla kareye yerleştirilir.",12,MUTED));
+        stickerRows=column();stickerCard.addView(stickerRows);
 
         editor=card(root);heading(editor,"02  Kes, kırp ve biçimlendir");
         info=text("",12,MUTED);editor.addView(info);
@@ -110,12 +117,13 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         editor.addView(text("GIF ses içermez. GIF çıktısı en fazla 60 saniye olabilir. Video kaydında ses varsa korunur.",12,MUTED));
         exportGif=button("GIF olarak kaydet",true);editor.addView(exportGif);exportGif.setOnClickListener(v -> save(true));
         exportVideo=button("Video (MP4) olarak kaydet",false);editor.addView(exportVideo);exportVideo.setOnClickListener(v -> save(false));
+        exportSticker=button("WhatsApp çıkartması oluştur",false);editor.addView(exportSticker);exportSticker.setOnClickListener(v -> saveSticker());
 
         outputCard=card(root);heading(outputCard,"Son kaydın hazır");outputCard.addView(text("Videolar: Movies/KlipAtolyesi\nGIF’ler: Pictures/KlipAtolyesi",13,MUTED));
         LinearLayout outputRow=row(outputCard);open=button("Dosyayı aç",false);share=button("Paylaş",true);outputRow.addView(open,weight());outputRow.addView(share,weight());
         open.setOnClickListener(v -> output(false));share.setOnClickListener(v -> output(true));
         LinearLayout footer=card(root);update=button("İndirme motorunu güncelle",false);footer.addView(update);update.setOnClickListener(v -> {notifications();engine.update(this);});
-        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.0.2 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X ile bağlantılı değildir.",12,MUTED));
+        footer.addView(text("X indirmesi başarısız olursa motoru güncellemeyi deneyin. Gizli, silinmiş ve giriş gerektiren gönderiler desteklenmeyebilir. Çoklu videolu gönderilerde ilk medya alınır.\n\nKlip Atölyesi 1.1.0 · Reklamsız\nDüzenleme ve dönüştürme cihazda yapılır. X veya WhatsApp ile bağlantılı değildir.",12,MUTED));
         Button about=button("Kullanım ve açık kaynak lisansları",false);footer.addView(about);about.setOnClickListener(v -> new AlertDialog.Builder(this).setTitle("Klip Atölyesi").setMessage("Yalnızca kaydetme ve kullanma hakkınız bulunan içerikleri işleyin.\n\nİndirme: yt-dlp / youtubedl-android\nDönüştürme: FFmpeg\nUygulama ve bağımlılıklar GPL-3.0 kapsamında sunulur. Kaynak kod teslim paketindedir.\n\nhttps://github.com/yausername/youtubedl-android\nhttps://github.com/yt-dlp/yt-dlp\nhttps://ffmpeg.org\n\nUygulama geliştiricisine dosya veya analiz verisi gönderilmez. X indirmeleri X sunucularıyla; motor güncellemesi GitHub ile iletişim kurar.").setPositiveButton("Tamam",null).show());
         engine.listener=this;
         if(state!=null) { url.setText(state.getString("url","")); }
@@ -130,6 +138,7 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         cancel.setVisibility(engine.busy?View.VISIBLE:View.GONE);
         download.setEnabled(!engine.busy);importButton.setEnabled(!engine.busy);update.setEnabled(!engine.busy);
         saveGif.setEnabled(!engine.busy);saveVideo.setEnabled(!engine.busy);exportGif.setEnabled(!engine.busy);exportVideo.setEnabled(!engine.busy);
+        saveSticker.setEnabled(!engine.busy);exportSticker.setEnabled(!engine.busy);refreshStickerPacks();
         quickSaveCard.setVisibility(engine.source==null?View.GONE:View.VISIBLE);
         editor.setVisibility(engine.source==null?View.GONE:View.VISIBLE);outputCard.setVisibility(engine.result==null?View.GONE:View.VISIBLE);
         crop.setEnabled(!engine.busy);
@@ -144,12 +153,42 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
     }
     private void save(boolean gifOutput) {
         hideKeyboard();video.pause();notifications();
+        engine.export(this,selectedEdit(gifOutput));
+    }
+    private void saveSticker() {
+        hideKeyboard();video.pause();notifications();engine.exportSticker(this,selectedEdit(false));
+    }
+    private EditSpec selectedEdit(boolean gifOutput) {
         EditSpec s=new EditSpec();s.start=number(start,Double.NaN);s.end=number(end,Double.NaN);s.width=engine.width;s.height=engine.height;
         s.left=crop.left;s.top=crop.top;s.right=crop.right;s.bottom=crop.bottom;
         s.rotation=rotate.getSelectedItemPosition()*90;s.mirror=mirror.isChecked();s.filter=filter.getSelectedItemPosition();
         s.speed=new double[]{.25,.5,.75,1,1.5,2,4}[speed.getSelectedItemPosition()];s.maxWidth=new int[]{480,720,1080,1920}[size.getSelectedItemPosition()];
         s.fps=new int[]{10,15,20,24}[fps.getSelectedItemPosition()];s.gif=gifOutput;s.mute=mute.isChecked();
-        engine.export(this,s);
+        return s;
+    }
+    private void refreshStickerPacks() {
+        try {
+            List<StickerStore.Pack> packs=StickerStore.list(this);StringBuilder signature=new StringBuilder(Boolean.toString(engine.busy));
+            for(StickerStore.Pack p:packs)signature.append(p.id).append(p.version);
+            if(signature.toString().equals(stickerSignature))return;stickerSignature=signature.toString();stickerRows.removeAllViews();
+            if(packs.isEmpty())stickerRows.addView(text("Henüz çıkartma yok. Bir GIF veya video açıp ‘WhatsApp çıkartması oluştur’a dokun.",13,MUTED));
+            for(StickerStore.Pack pack:packs) {
+                int count=pack.stickers.size();stickerRows.addView(text(pack.name+" · "+count+"/30 çıkartma",14,TEXT));
+                if(count<3)stickerRows.addView(text("WhatsApp’a eklemek için "+(3-count)+" çıkartma daha oluştur.",12,MUTED));
+                Button add=button("WhatsApp’a ekle",true);add.setEnabled(count>=3 && !engine.busy);add.setContentDescription(pack.name+" paketini WhatsApp’a ekle");stickerRows.addView(add);add.setOnClickListener(v -> addStickerPack(pack));
+            }
+        } catch(Exception e) {stickerRows.removeAllViews();stickerRows.addView(text("Çıkartma paketleri okunamadı: "+e.getMessage(),13,0xffffb5a8));}
+    }
+    private void addStickerPack(StickerStore.Pack pack) {
+        List<String> packages=new ArrayList<>(),labels=new ArrayList<>();
+        for(String name:new String[]{"com.whatsapp","com.whatsapp.w4b"})try {getPackageManager().getPackageInfo(name,0);packages.add(name);labels.add(name.equals("com.whatsapp")?"WhatsApp":"WhatsApp Business");}catch(PackageManager.NameNotFoundException ignored){}
+        if(packages.isEmpty()) {new AlertDialog.Builder(this).setTitle("WhatsApp bulunamadı").setMessage("WhatsApp veya WhatsApp Business yüklü olmalı. Hazırladığın çıkartmalar uygulamada saklanıyor; yükledikten sonra bu düğmeyle ekleyebilirsin.").setPositiveButton("Tamam",null).show();return;}
+        if(packages.size()==1)openStickerPack(pack,packages.get(0));
+        else new AlertDialog.Builder(this).setTitle("Paketi nereye ekleyelim?").setItems(labels.toArray(new String[0]),(dialog,which)->openStickerPack(pack,packages.get(which))).show();
+    }
+    private void openStickerPack(StickerStore.Pack pack,String target) {
+        try {startActivityForResult(StickerStore.addIntent(pack,target),20);}
+        catch(ActivityNotFoundException e) {Toast.makeText(this,"WhatsApp çıkartma ekleme ekranını açamadı. WhatsApp’ı güncellemeyi deneyin.",Toast.LENGTH_LONG).show();}
     }
     private void output(boolean sharing) {
         try {
@@ -170,7 +209,14 @@ public class MainActivity extends Activity implements MediaEngine.Listener {
         setIntent(new Intent(this,MainActivity.class));
     }
     protected void onNewIntent(Intent i) {super.onNewIntent(i);handleIntent(i);}
-    protected void onActivityResult(int request,int result,Intent data) {super.onActivityResult(request,result,data);if(request==10 && result==RESULT_OK && data!=null && data.getData()!=null) {notifications();engine.importFile(this,data.getData());}}
+    protected void onActivityResult(int request,int result,Intent data) {
+        super.onActivityResult(request,result,data);
+        if(request==10 && result==RESULT_OK && data!=null && data.getData()!=null) {notifications();engine.importFile(this,data.getData());}
+        if(request==20) {
+            if(result==RESULT_OK)Toast.makeText(this,"Çıkartma paketi WhatsApp’a eklendi.",Toast.LENGTH_LONG).show();
+            else if(data!=null && data.getStringExtra("validation_error")!=null)new AlertDialog.Builder(this).setTitle("WhatsApp paketi eklemedi").setMessage(data.getStringExtra("validation_error")).setPositiveButton("Tamam",null).show();
+        }
+    }
     protected void onStart() {super.onStart();engine.listener=this;changed();handler.post(previewLoop);}
     protected void onStop() {handler.removeCallbacks(previewLoop);video.pause();if(engine.listener==this)engine.listener=null;super.onStop();}
     protected void onDestroy() {handler.removeCallbacks(previewLoop);video.stopPlayback();gif.clear();if(engine.listener==this)engine.listener=null;super.onDestroy();}

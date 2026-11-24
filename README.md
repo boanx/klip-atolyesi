@@ -2,7 +2,7 @@
 
 X bağlantısından video alma, telefondan video/GIF açma ve kaynak biçiminden bağımsız MP4 ya da hareketli GIF üretme uygulaması. Türkçe, reklamsız; düzenleme cihaz üzerinde çalışır. Android 10 ve üzeri; ARM64, ARMv7 ve x86_64 işlemciler.
 
-**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.0.2.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
+**[Android APK'sını indir](https://github.com/boanx/klip-atolyesi/releases/latest/download/Klip-Atolyesi-1.1.0.apk)** · [Sürümler](https://github.com/boanx/klip-atolyesi/releases) · [Kurulum kılavuzu](docs/KURULUM.txt)
 
 APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle doğrulanmıştır. Fiziksel telefonda ayrıca test edilmemiştir.
 
@@ -16,6 +16,19 @@ APK Android 15 emülatöründe gerçek X indirmesi ve MP4/GIF dönüşümleriyle
 
 Videolar `Movies/KlipAtolyesi`, GIF’ler `Pictures/KlipAtolyesi` klasörüne kaydedilir. Bazı galeri uygulamaları GIF’leri ayrı “Animasyonlar” albümünde gösterebilir; Android Dosyalar uygulamasından da erişilebilir.
 
+## GIF veya videodan hareketli WhatsApp çıkartması
+
+1. Telefonda bulunan bir GIF/video açın veya X’ten indirin.
+2. En fazla 10 saniyelik bölüm seçin. Kesme, kırpma, hız ve görünüm ayarları çıkartmaya uygulanır.
+3. **WhatsApp çıkartması oluştur** düğmesine dokunun. Uygulama hareketli, sessiz WebP dosyasını otomatik sıkıştırıp pakete kaydeder.
+4. Pakette en az **3 çıkartma** olduğunda **WhatsApp’a ekle** düğmesine dokunun. WhatsApp’ın açtığı ekleme ekranını onaylayın. WhatsApp ve WhatsApp Business birlikte yüklüyse uygulama seçebilirsiniz.
+
+Çıkartmalar 512×512 piksel, en fazla 10 saniye ve 500 KB olur. Şeffaf kenarlar eklenerek görüntü kareye sığdırılır; görüntünün kendi arka planı otomatik kaldırılmaz. Kaynak genişliği/uzunluğu korunur; genel GIF/video genişlik seçeneği çıkartmanın 512×512 ölçüsünü değiştirmez. Karmaşık görüntülerde 500 KB için kalite ve kare hızı otomatik düşürülür. Sınıra sığmayan içerikte daha kısa bölüm seçmeniz istenir.
+
+Paketler uygulamanın özel depolamasında kalıcı olarak saklanır; başka bir GIF açmak önceki çıkartmaları silmez. Her pakette 3–30 çıkartma bulunur. Son paket dolunca yeni paket açılır; en fazla 10 paket desteklenir. WhatsApp yüklenmemişse çıkartma oluşturabilirsiniz; eklemek için WhatsApp veya WhatsApp Business gerekir.
+
+En az üç çıkartma, 512×512, WebP, 500 KB ve 10 saniye koşulları [WhatsApp’ın resmi Android çıkartma kılavuzuna](https://github.com/WhatsApp/stickers/tree/main/Android) göre uygulanır. Paket ekleme, kullanıcı onaylı resmi Android intent’iyle yapılır; mesaj veya sohbet gönderilmez.
+
 ## Sınırlar
 
 - Yalnızca erişilebilir X/Twitter gönderileri. Gizli, silinmiş, abonelik veya oturum açma gerektiren içerikler desteklenmeyebilir. X tarafındaki değişiklikler indirmeyi etkileyebilir; uygulamadaki **İndirme motorunu güncelle** düğmesini kullanın.
@@ -28,6 +41,8 @@ Videolar `Movies/KlipAtolyesi`, GIF’ler `Pictures/KlipAtolyesi` klasörüne ka
 ## Gizlilik
 
 Dosyalar düzenleme için bir sunucuya yüklenmez. Analiz veya reklam SDK’sı yoktur. İndirme X ve medya sunucularına, isteğe bağlı motor güncellemesi GitHub’a bağlanır. Galeri kaydı MediaStore, dosya seçimi Android’in sistem dosya seçicisiyle yapılır; genel depolama erişimi istenmez. İşlem bildirimi için bildirim izni isteğe bağlıdır.
+
+Çıkartma sağlayıcısı sadece paket dizinindeki kayıtlı WebP/PNG dosyalarını WhatsApp’ın `com.whatsapp.sticker.READ` okuma izniyle sunar. Kaynak videoları, diğer özel dosyaları veya imza bilgilerini açmaz. WhatsApp hesabına giriş yapmaz ve sohbetlere erişmez.
 
 ## Kaynaktan derleme
 
@@ -69,3 +84,7 @@ Android'in bazı MP4 dosyalarında görüntü boyutunu veya süreyi boş döndü
 ## 1.0.2: doğrudan GIF kaydetme
 
 Dosya açıldığında görünen **GIF olarak kaydet** ve **Video (MP4) olarak kaydet** düğmeleri eklendi. Biçim menüsünde seçim yapmaya gerek yoktur. Aynı düğmeler düzenleme seçeneklerinin altında da yer alır; seçili kesme, kırpma ve diğer ayarlar uygulanır.
+
+## 1.1.0: WhatsApp çıkartmaları
+
+Hareketli WebP oluşturma, otomatik boyut optimizasyonu, kalıcı çıkartma paketleri ve WhatsApp/WhatsApp Business’a kullanıcı onayıyla paket ekleme desteği eklendi. GIF ve MP4 kaydı korunur.

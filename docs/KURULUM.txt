@@ -1,6 +1,6 @@
-KLİP ATÖLYESİ 1.0.2 — ANDROID
+KLİP ATÖLYESİ 1.1.0 — ANDROID
 
-1. Klip-Atolyesi-1.0.2.apk dosyasını Android telefonunuza aktarın.
+1. Klip-Atolyesi-1.1.0.apk dosyasını Android telefonunuza aktarın.
 2. Dosyayı açın. Android isterse dosyayı açtığınız uygulamaya
    “Bilinmeyen uygulamaları yükle” iznini verin ve Yükle'ye dokunun.
 3. Klip Atölyesi'ni açın.
@@ -24,6 +24,19 @@ uygulamadaki “İndirme motorunu güncelle” düğmesini deneyin.
 
 Videolar: Movies/KlipAtolyesi
 GIF'ler: Pictures/KlipAtolyesi
+
+WHATSAPP ÇIKARTMASI
+
+Bir GIF veya video açın. En fazla 10 saniyelik bölüm seçip
+“WhatsApp çıkartması oluştur”a dokunun. İşlem cihazda yapılır.
+512×512 hareketli WebP ve dosya boyutu otomatik hazırlanır.
+
+Pakete en az 3 çıkartma ekleyince “WhatsApp’a ekle” düğmesi açılır.
+WhatsApp’ın gösterdiği ekleme ekranını onaylayın. WhatsApp Business
+da desteklenir. Paket başına en fazla 30 çıkartma bulunur.
+
+Çıkartmalar uygulamada saklanır, başka bir GIF açınca silinmez.
+Şeffaf kenar eklenir; görüntünün arka planı otomatik kaldırılmaz.
 
 Doğrulama: Android 15 emülatöründe gerçek X indirmesi,
 MP4/GIF dönüşümleri, kesme, kırpma, döndürme, hız ve ses testleri.

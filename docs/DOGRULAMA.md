@@ -33,3 +33,18 @@ Fiziksel Android telefonda ve tüm üretici/Android sürümü kombinasyonlarınd
 - Arayüzdeki MP4 düğmesine basılarak video kaydı doğrulandı.
 - Mevcut kesme, kırpma, hız, ses ve dönüştürme testleri başarılı.
 - 15 birim testi ve Android Lint denetimi başarılı.
+
+## 1.1.0: hareketli WhatsApp çıkartmaları
+
+24 Kasım 2026 · Android 15 emülatörü.
+
+- 21 birim testi başarılı; Android Lint release denetiminde hata yok.
+- Arayüzdeki çıkartma düğmesiyle GIF'ten üç kalıcı çıkartma oluşturuldu.
+- Üretilen WebP 512×512, çok kareli, döngülü ve 500 KB sınırının altında.
+- Android ImageDecoder, dosyayı AnimatedImageDrawable olarak açtı.
+- Şeffaf kenarlar piksel düzeyinde doğrulandı.
+- 10 saniyelik örnek otomatik kalite ayarıyla 10.000 ms ve 499.992 bayt olarak üretildi; süre ve 500 KB koşulları birlikte sağlandı.
+- WhatsApp metadata, çıkartma listesi ve dosya sağlayıcı protokolleri doğrulandı.
+- Paket dışındaki özel dosyaların açılması engellendi; dış istemcinin WhatsApp okuma izni olmadan sorgusu reddedildi.
+- WhatsApp ve WhatsApp Business için resmi paket ekleme intent'i kullanılır.
+- Emülatörde WhatsApp kurulu değildir; WhatsApp içindeki son ekleme/onay ekranı burada uçtan uca test edilmemiştir.

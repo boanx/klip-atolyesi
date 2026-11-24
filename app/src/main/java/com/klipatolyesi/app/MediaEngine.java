@@ -30,6 +30,7 @@ public final class MediaEngine {
     public volatile boolean sourceGif;
     public volatile Uri result;
     public volatile String resultMime;
+    public volatile String lastStickerPack;
     public volatile Listener listener;
     private volatile Process process;
     private Runnable pending;
@@ -241,6 +242,31 @@ public final class MediaEngine {
                 result=saved; resultMime=mime; saved=null;
                 state((spec.gif?"GIF":"Video")+" galeriye kaydedildi. Açabilir veya paylaşabilirsiniz.",100);
             } finally { out.delete(); if(saved!=null) ctx.getContentResolver().delete(saved,null,null); }
+        });
+    }
+    public void exportSticker(Context c,EditSpec spec) {
+        if(source==null)return;
+        try {StickerSpec.validate(spec,duration);}catch(Exception e){error=e.getMessage();notifyUi();return;}
+        File input=source;
+        submit(c,"WhatsApp çıkartması hazırlanıyor…",ctx -> {
+            File out=new File(ctx.getCacheDir(),"sticker-"+System.nanoTime()+".webp");
+            try {
+                int[][] attempts={{80,10},{60,10},{40,10},{25,10},{20,8},{15,5}};boolean valid=false;
+                String tail="";
+                for(int attempt=0;attempt<attempts.length;attempt++) {
+                    checkCancel();state("Çıkartma oluşturuluyor · boyut ayarı "+(attempt+1)+"/"+attempts.length,-1);
+                    Process p=ffmpeg(ctx,StickerSpec.args(spec,input.getAbsolutePath(),out.getAbsolutePath(),attempts[attempt][0],attempts[attempt][1]));
+                    StringBuilder log=new StringBuilder();
+                    try(BufferedReader reader=new BufferedReader(new InputStreamReader(p.getInputStream()))) {String line;while((line=reader.readLine())!=null){log.append(line).append('\n');if(log.length()>6000)log.delete(0,3000);}}
+                    int code=p.waitFor();checkCancel();tail=log.toString();
+                    if(code!=0)throw new IOException("Çıkartma dönüştürülemedi.\n"+tail);
+                    if(out.length()>StickerSpec.MAX_BYTES)continue;
+                    try{WebpInfo.read(out).validateSticker();valid=true;break;}catch(IOException ignored){}
+                }
+                if(!valid)throw new IOException("Çıkartma 500 KB ve 10 saniye sınırına sığmadı. Daha kısa bir bölüm seçin.");
+                checkCancel();lastStickerPack=StickerStore.add(ctx,out);
+                state("Hareketli çıkartma pakete kaydedildi. Pakette en az 3 çıkartma olduğunda WhatsApp’a ekleyebilirsiniz.",100);
+            } finally {out.delete();}
         });
     }
     private String friendly(Exception e) {
